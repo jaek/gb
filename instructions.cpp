@@ -1,38 +1,48 @@
-#include <ostream>
-#include <iostream>
-#include "registers.h"
-#include "instructions.h"
+#include "cpu.h"
+#include<cstring>
 
-
-r8 add(Registers &r, r8 a, r8 b){
-  if ((int) a + b > 0xff) {
-    r.set_flag('c');
+OpCode CPU::fetch_instruction(){
+  uint8_t opcode = rom[r.pc];
+  if(opcode == OC_CB_PREFIX){
+    return cbprefixed[rom[r.pc+1]];
   }
-  return a + b;
+  return unprefixed[opcode];
 }
 
-//A,r8 - A,n8 - A,[HL]
-void op_add(Registers &r, r8 source){
-  r.a = add(r, r.a, source);
-}
-
-//HL,SP - HL,0//A,r8 - A,n8 - A,[HL]
-void op_add(Registers &r, r8 source);
-
-//HL,SP - HL,r16
-void op_add(Registers &r, r16 source);
-
-//SP,e8
-void op_add(Registers &r, e8 source);
-
-OpCode* OpCodeParser::get_opcode(uint8_t opcode){
-  if(opcode == 0xcb){
-    return cbprefixed;
+OpDataType CPU::get_operand_type(char *s){
+  char c = s[0];
+  if(strlen(s) == 1){ 
+    if ( c >= '0' && c <= '9' ) { return bit;
+    } else if ( c == 'Z') { return zero;
+    } else { return reg8; } 
+  } else if(strlen(s) == 2){
+    if(c >= 'a' and c <= 'z'){ // literal
+      switch(c){
+        case 'a':
+          return a8;
+        case 'n':
+          return n8;
+        default: 
+          return s8;
+      }
+    } else if(s[1] == 'Z'){ return zero;
+    } else { return reg16; } 
+  } else {
+    switch(c){
+      case 'a':
+        return a16;
+      case 'n':
+        return n16;
+      case '$': 
+        return vector; 
+      default:
+        return none;
+    }
   }
-  return unprefixed;
+  return none;
 }
 
-void OpCodeParser::init_opcodes(){
+void CPU::init_opcodes(){
   //initialize with dummy values
   for(int i=0;i<=0xfa;i++){
     cbprefixed[i]={false,"",0,-1,-1,-1,-1,0,0,"",0,"",0};

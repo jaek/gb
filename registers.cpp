@@ -1,7 +1,20 @@
 #include<cstdint>
 #include<assert.h> 
-
+#include<iostream>
 #include"registers.h"
+
+struct HexCharStruct{
+  uint8_t c;
+  HexCharStruct(uint8_t _c) : c(_c) { }
+};
+
+inline std::ostream& operator<<(std::ostream& o, const HexCharStruct& hs){
+  return (o << std::hex << (int)hs.c);
+}
+
+inline HexCharStruct hex(uint8_t _c){
+  return HexCharStruct(_c);
+}
 
 uint8_t Registers::get_mask(char flag){
   switch(flag){
@@ -15,11 +28,14 @@ uint8_t Registers::get_mask(char flag){
       return 0x10;
   }
   return 0x00;
+
 }
 bool Registers::get_flag(char flag){
   return (f & get_mask(flag)) > 0;
 }
+
 void Registers::set_flag(char flag){ f = f | get_mask(flag) ;}
+
 void Registers::unset_flag(char flag){ f = get_mask(flag) ? !f : f ;}
 // There are four virtual 16 bit registers: af bc de hl
 // af
@@ -54,12 +70,14 @@ uint16_t Registers::get_hl(){
   uint16_t v = h;
   return (v << 8) | l;
 } 
+
 void Registers::set_hl(uint16_t v){
   h = (v & 0xFF00) >> 8;
   l = (v & 0xFF);
 }
 
 void Registers::init_values(){
+  //DMG-01
   a = 0x01;
   b = 0xFF;
   c = 0x13;
@@ -71,6 +89,44 @@ void Registers::init_values(){
   pc = 0x0100;
   sp = 0xFFFE;
 }
+
+void Registers::print_registers(){
+  std::cout << "Register Contents" << std::endl;
+  std::cout << "A  = 0x" << hex(a) << std::endl;
+  std::cout << "B  = 0x" << hex(b) << std::endl;
+  std::cout << "C  = 0x" << hex(c) << std::endl;
+  std::cout << "D  = 0x" << hex(d) << std::endl;
+  std::cout << "E  = 0x" << hex(e) << std::endl;
+  std::cout << "F  = 0x" << hex(f) << std::endl;
+  std::cout << "H  = 0x" << hex(h) << std::endl;
+  std::cout << "L  = 0x" << hex(l) << std::endl;
+  std::cout << "SP = 0x" << hex(sp) << std::endl;
+  std::cout << "PC = 0x" << hex(sp) << std::endl;
+}
+
+r8 Registers::get_register_by_name(char r){
+  switch(r){
+    case 'A':
+      return a;
+    case 'B':
+      return b;
+    case 'C':
+      return c;
+    case 'D':
+      return d;
+    case 'E':
+      return e;
+    case 'F':
+      return f;
+    case 'H':
+      return f;
+    case 'L':
+      return l;
+    default:
+      return -1;
+  }
+}
+
 
 void run_tests(){
   Registers r = Registers();
