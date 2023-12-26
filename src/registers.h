@@ -39,7 +39,7 @@ struct Registers
   void set_hl(uint16_t v);
   void init_values();
   void print_registers();
-  Registers(){init_values();};
+  Registers();
 };
 
 #endif

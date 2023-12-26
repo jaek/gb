@@ -16,6 +16,10 @@ inline HexCharStruct hex(uint8_t _c){
   return HexCharStruct(_c);
 }
 
+Registers::Registers(){
+  init_values();
+}
+
 uint8_t Registers::get_mask(char flag){
   switch(flag){
     case 'z':
@@ -101,29 +105,29 @@ void Registers::print_registers(){
   std::cout << "H  = 0x" << hex(h) << std::endl;
   std::cout << "L  = 0x" << hex(l) << std::endl;
   std::cout << "SP = 0x" << hex(sp) << std::endl;
-  std::cout << "PC = 0x" << hex(sp) << std::endl;
+  std::cout << "PC = 0x" << hex(pc) << std::endl;
 }
 
 r8 Registers::get_register_by_name(char r){
   switch(r){
     case 'A':
-      return a;
+      return this->a;
     case 'B':
-      return b;
+      return this->b;
     case 'C':
-      return c;
+      return this->c;
     case 'D':
-      return d;
+      return this->d;
     case 'E':
-      return e;
+      return this->e;
     case 'F':
-      return f;
+      return this->f;
     case 'H':
-      return f;
+      return this->f;
     case 'L':
-      return l;
+      return this->l;
     default:
-      return -1;
+      return 1;
   }
 }
 

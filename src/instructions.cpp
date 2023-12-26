@@ -44,7 +44,7 @@ OpDataType CPU::get_operand_type(char *s){
 
 void CPU::init_opcodes(){
   //initialize with dummy values
-  for(int i=0;i<=0xfa;i++){
+  for(int i=0;i<0xff;i++){
     cbprefixed[i]={false,"",0,-1,-1,-1,-1,0,0,"",0,"",0};
     unprefixed[i]={false,"",0,-1,-1,-1,-1,0,0,"",0,"",0};
   }

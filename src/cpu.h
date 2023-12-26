@@ -8,7 +8,7 @@
 #define NS_PER_TICK (SECOND_NS/CLOCK_SPEED_HZ)
 #define MAX_ROM_SIZE 1000000 // 8 Mbit = 1000000 bytes
 
-#define OC_MAX_OPCODE 0xfa
+#define OC_MAX_OPCODE 0xff
 #define OC_CB_PREFIX 0xcb
 
 enum OpDataType { none, n8, a8, s8, reg8, bit, zero, vector, n16, a16, reg16};
@@ -20,6 +20,8 @@ struct Operand {
     uint16_t data16;
   };
   bool is16bit();
+  uint8_t get_offset();
+  Operand();
 };
 
 struct OpCode {
@@ -48,8 +50,8 @@ class CPU{
     uint8_t get_rom_next8(int);
     uint16_t get_rom_next16(int);
 
-    OpCode* unprefixed;
-    OpCode* cbprefixed;
+    OpCode unprefixed [OC_MAX_OPCODE+1];
+    OpCode cbprefixed [OC_MAX_OPCODE+1];
 
     Registers r;
 
@@ -57,14 +59,16 @@ class CPU{
 
     void clock_loop();
     OpCode fetch_instruction();
-    void get_operands(OpCode oc, Operand &op1, Operand &op2);
-    OpDataType get_operand_type(char *s);
+
+    uint8_t fetch_operands(OpCode oc, Operand &op1, Operand &op2);
+    Operand get_operand(OpCode, int);
+    OpDataType get_operand_type(char*);
     uint8_t get_operand8(OpDataType, char*, int);
     uint16_t get_operand16(OpDataType, char*, int);
 
     void op_nop();
-    void op_add8(OpCode oc);
-    CPU(uint8_t *rom);
+    void op_add8(OpCode);
+    CPU(uint8_t*);
 
 };
 

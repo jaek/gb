@@ -10,16 +10,34 @@
 #include"cpu.h"
 
 bool Operand::is16bit(){
-  return datatype >= (OpDataType) n16;
+  return datatype >= n16;
+}
+
+uint8_t Operand::get_offset(){
+  switch(datatype){
+    case n8:
+    case a8:
+    case s8:
+      return 1;
+    case bit:
+    case n16:
+    case a16:
+      return 2;
+    default:
+      return 0;
+  }
+}
+
+Operand::Operand(){
+  datatype = none;
+  data8 = 0;
 }
 
 CPU::CPU(uint8_t *buffer){
   rom = buffer;
+  r = Registers();
   running = true;
-  unprefixed = new OpCode [OC_MAX_OPCODE];
-  cbprefixed = new OpCode [OC_MAX_OPCODE];
   init_opcodes();
-   
 }
 
 void CPU::op_nop(){
@@ -40,7 +58,7 @@ void CPU::clock_loop(){
     nanosleep(&req, NULL);
     if(i == 0){
       curr = fetch_instruction();
-      get_operands(curr, op1, op2);
+      fetch_operands(curr, op1, op2);
       //run command - return clock cycles
     } else {
       i--;
@@ -107,24 +125,31 @@ uint8_t CPU::get_operand8(OpDataType dt, char * name, int offset){
   return 0;
 }
       
-void CPU::get_operands(OpCode oc, Operand &op1, Operand &op2){
-  int offset = 1;
+uint8_t CPU::fetch_operands(OpCode oc, Operand &op1, Operand &op2)
+{
+  uint8_t offset = 1;
   op1.datatype = get_operand_type(oc.op1_name);
-  if (op1.datatype == none) { return; }
+
+  if (op1.datatype == none) { return 0; }
   if (op1.is16bit()){
     op1.data16 = get_operand16(op1.datatype, oc.op1_name, offset);
-    offset += 2;
   } else {
     op1.data8 = get_operand8(op1.datatype, oc.op1_name, offset);
-    offset += 1;
   }
+
   op2.datatype = get_operand_type(oc.op2_name);
-  if (op2.datatype == none) { return; }
+  
+  if (op2.datatype == none) { return op1.get_offset(); }
+
+  offset += op1.get_offset();
+
   if (op2.is16bit()){
     op2.data16 = get_operand16(op2.datatype, oc.op2_name, offset);
   } else {
     op2.data8 = get_operand8(op2.datatype, oc.op2_name, offset);
   }
+
+  return op1.get_offset() + op2.get_offset();
 }
 
 // ADD | 0x09 : HL, BC
@@ -149,40 +174,36 @@ void CPU::op_add8(OpCode oc){
   return;
 }
 
-//int cpu_tests(uint8_t *rom){
-//  //CPU cpu = CPU(rom);
-//  return 0;
-//}
+#ifndef unit_test
+int main(int argc, char **argv) {
 
-//int main(int argc, char **argv) {
-//
-//    uint8_t *rom;
-//
-//    std::string rom_file = "";   
-//    if (argc == 2){
-//      rom_file = argv[1];
-//    } else {
-//      std::cout << "Usage: ./gb <rom_file>" << std::endl;
-//      return 1;
-//    }
-//    std::ifstream is (rom_file, std::ifstream::binary);
-//    //get length of ROM
-//    is.seekg(0, is.end);
-//    int length = is.tellg();
-//    is.seekg(0, is.beg);
-//
-//    //read into buffer
-//    rom = new uint8_t [length];
-//    std::cout << "Reading " << length << " bytes\n";
-//    is.read( (char*)(&rom[0]), length);
-//    if (is)
-//      std::cout << "Read ROM\n";
-//    else
-//      std::cout << "Error: only " << is.gcount() << " could be read";
-//    is.close();
-//
-//    CPU cpu = CPU(rom);
-//    cpu.r.print_registers();
-//    return 0;
-//}
+    uint8_t *rom;
 
+    std::string rom_file = "";   
+    if (argc == 2){
+      rom_file = argv[1];
+    } else {
+      std::cout << "Usage: ./gb <rom_file>" << std::endl;
+      return 1;
+    }
+    std::ifstream is (rom_file, std::ifstream::binary);
+    //get length of ROM
+    is.seekg(0, is.end);
+    int length = is.tellg();
+    is.seekg(0, is.beg);
+
+    //read into buffer
+    rom = new uint8_t [length];
+    std::cout << "Reading " << length << " bytes\n";
+    is.read( (char*)(&rom[0]), length);
+    if (is)
+      std::cout << "Read ROM\n";
+    else
+      std::cout << "Error: only " << is.gcount() << " could be read";
+    is.close();
+
+    CPU cpu = CPU(rom);
+    cpu.r.print_registers();
+    return 0;
+}
+#endif
