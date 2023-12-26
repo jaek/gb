@@ -21,6 +21,7 @@ struct Operand {
   };
   bool is16bit();
   uint8_t get_offset();
+  void show();
   Operand();
 };
 

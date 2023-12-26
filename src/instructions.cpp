@@ -3,6 +3,7 @@
 
 OpCode CPU::fetch_instruction(){
   uint8_t opcode = rom[r.pc];
+  //todo: check !pc>rom_len
   if(opcode == OC_CB_PREFIX){
     return cbprefixed[rom[r.pc+1]];
   }

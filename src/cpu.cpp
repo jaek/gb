@@ -13,6 +13,16 @@ bool Operand::is16bit(){
   return datatype >= n16;
 }
 
+void Operand::show(){
+  int data;
+  if ( is16bit() ){
+    data = data16;
+  } else {
+    data = data8;
+  }
+  std::cout << std::hex << data;
+}
+
 uint8_t Operand::get_offset(){
   switch(datatype){
     case n8:
@@ -83,6 +93,14 @@ void CPU::clock_loop(){
       //run command - return clock cycles
       i = execute_instruction(curr, op1, op2);
       #ifdef unit_test
+      std::cout << "Instruction: " << curr.mnemonic
+                << " " << curr.op1_name
+                << " " << curr.op2_name 
+                << " ( ";
+      op1.show();
+      std::cout << " ";
+      op2.show();
+      std::cout << " )" << std::endl;
       show_state();
       #endif
     } else {
