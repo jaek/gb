@@ -56,18 +56,20 @@ class CPU{
     Registers r;
 
     void init_opcodes();
-
     void clock_loop();
-    OpCode fetch_instruction();
+    void show_state();
 
-    uint8_t fetch_operands(OpCode oc, Operand &op1, Operand &op2);
+    OpCode fetch_instruction();
+    uint8_t fetch_operands(OpCode, Operand&, Operand&);
     Operand get_operand(OpCode, int);
     OpDataType get_operand_type(char*);
     uint8_t get_operand8(OpDataType, char*, int);
     uint16_t get_operand16(OpDataType, char*, int);
+    uint8_t execute_instruction(OpCode, Operand, Operand);
 
-    void op_nop();
-    void op_add8(OpCode);
+    void halt();
+    uint8_t op_nop(OpCode);
+    uint8_t op_add8(OpCode, Operand, Operand);
     CPU(uint8_t*);
 
 };

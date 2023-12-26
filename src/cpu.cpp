@@ -40,29 +40,53 @@ CPU::CPU(uint8_t *buffer){
   init_opcodes();
 }
 
-void CPU::op_nop(){
-  return;
+uint8_t CPU::op_nop(OpCode oc){
+  return oc.cycles_success;
+}
+
+void CPU::halt(){
+  running = false;
+}
+
+void CPU::show_state(){
+  r.print_registers();
+}
+
+uint8_t CPU::execute_instruction(OpCode oc, Operand op1, Operand op2){
+  if (!strcmp(oc.mnemonic, "ADD")){
+    return op_add8(oc, op1, op2);
+  } else {
+    //dump state
+    halt();
+  }
+  return 0;
 }
 
 void CPU::clock_loop(){
   struct timespec req;
+
   req.tv_sec = 0;
   req.tv_nsec = NS_PER_TICK;
+  #ifdef unit_test
+  req.tv_nsec = 100000000L;
+  #endif
 
   OpCode curr;
   Operand op1;
   Operand op2;
-  int debug_n = 1000; //n_instructions to execute
-  int i = 0;
-  while(running && debug_n){
+  uint8_t i = 0;
+  while(running){
     nanosleep(&req, NULL);
     if(i == 0){
       curr = fetch_instruction();
       fetch_operands(curr, op1, op2);
       //run command - return clock cycles
+      i = execute_instruction(curr, op1, op2);
+      #ifdef unit_test
+      show_state();
+      #endif
     } else {
       i--;
-      debug_n--;
     }
   }
 }
@@ -167,11 +191,13 @@ uint8_t CPU::fetch_operands(OpCode oc, Operand &op1, Operand &op2)
 // ADD | 0x87 : A, A
 // ADD | 0xC6 : A, n8
 
-void CPU::op_add8(OpCode oc){
-  OpCode oc2 = oc;
-  oc = oc2;
-  oc2 = oc;
-  return;
+uint8_t CPU::op_add8(OpCode oc, Operand op1, Operand op2){
+  if((int) op1.data8 + op2.data8 > 0xff){
+    //handle_overflow
+  } else {
+    r.a += op2.data8;
+  }
+  return oc.cycles_success;
 }
 
 #ifndef unit_test
