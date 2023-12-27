@@ -34,9 +34,9 @@ void CPU::clock_loop(){
   OpCode curr;
   Operand op1;
   Operand op2;
-
+  int debug_n = 1000; //n_instructions to execute
   int i = 0;
-  while(running){
+  while(running && debug_n){
     nanosleep(&req, NULL);
     if(i == 0){
       curr = fetch_instruction();
@@ -44,6 +44,7 @@ void CPU::clock_loop(){
       //run command - return clock cycles
     } else {
       i--;
+      debug_n--;
     }
   }
 }
@@ -53,8 +54,8 @@ uint8_t CPU::get_rom_next8(int offset){
 }
 
 uint16_t CPU::get_rom_next16(int offset){
-  uint8_t h = get_rom_next8( rom[r.pc+offset]);
-  uint8_t l = get_rom_next8( rom[r.pc+offset+1]);
+  uint8_t h = get_rom_next8(offset);
+  uint8_t l = get_rom_next8(++offset);
   return (((uint16_t) h << 8 ) & 0xff00) | (l & 0xff);
 }
 
@@ -153,35 +154,35 @@ void CPU::op_add8(OpCode oc){
 //  return 0;
 //}
 
-int main(int argc, char **argv) {
-
-    uint8_t *rom;
-
-    std::string rom_file = "";   
-    if (argc == 2){
-      rom_file = argv[1];
-    } else {
-      std::cout << "Usage: ./gb <rom_file>" << std::endl;
-      return 1;
-    }
-    std::ifstream is (rom_file, std::ifstream::binary);
-    //get length of ROM
-    is.seekg(0, is.end);
-    int length = is.tellg();
-    is.seekg(0, is.beg);
-
-    //read into buffer
-    rom = new uint8_t [length];
-    std::cout << "Reading " << length << " bytes\n";
-    is.read( (char*)(&rom[0]), length);
-    if (is)
-      std::cout << "Read ROM\n";
-    else
-      std::cout << "Error: only " << is.gcount() << " could be read";
-    is.close();
-
-    CPU cpu = CPU(rom);
-    cpu.r.print_registers();
-    return 0;
-}
+//int main(int argc, char **argv) {
+//
+//    uint8_t *rom;
+//
+//    std::string rom_file = "";   
+//    if (argc == 2){
+//      rom_file = argv[1];
+//    } else {
+//      std::cout << "Usage: ./gb <rom_file>" << std::endl;
+//      return 1;
+//    }
+//    std::ifstream is (rom_file, std::ifstream::binary);
+//    //get length of ROM
+//    is.seekg(0, is.end);
+//    int length = is.tellg();
+//    is.seekg(0, is.beg);
+//
+//    //read into buffer
+//    rom = new uint8_t [length];
+//    std::cout << "Reading " << length << " bytes\n";
+//    is.read( (char*)(&rom[0]), length);
+//    if (is)
+//      std::cout << "Read ROM\n";
+//    else
+//      std::cout << "Error: only " << is.gcount() << " could be read";
+//    is.close();
+//
+//    CPU cpu = CPU(rom);
+//    cpu.r.print_registers();
+//    return 0;
+//}
 

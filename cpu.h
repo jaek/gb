@@ -40,12 +40,13 @@ struct OpCode {
 
 class CPU{
 
+    public:
     bool running;
+
     uint8_t *rom;
 
     uint8_t get_rom_next8(int);
     uint16_t get_rom_next16(int);
-    public:
 
     OpCode* unprefixed;
     OpCode* cbprefixed;

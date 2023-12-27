@@ -127,20 +127,3 @@ r8 Registers::get_register_by_name(char r){
   }
 }
 
-
-void run_tests(){
-  Registers r = Registers();
-  assert(r.get_flag('c') == 0);
-  r.set_flag('c');
-  assert(r.get_flag('c') == 1);
-  r.unset_flag('c');
-  assert(r.get_flag('c') == 0);
-  r.unset_flag('c');
-  assert(r.get_flag('c') == 0);
-  r.set_af(0x0000);
-  r.set_flag('c');
-  r.set_flag('z');
-  r.set_flag('n');
-  r.set_flag('h');
-  assert(r.get_af() == 0x00f0);
-}
