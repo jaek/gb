@@ -1,36 +1,41 @@
-CC=g++
-CFLAGS=-Wall -Wextra -Werror -pedantic -std=c++20
+.DEFAULT_GOAL := all
 
 SDIR=./src
-DDIR=$(SDIR)
-ODIR=$(SDIR)/obj
+IDIR=$(SDIR)
+ODIR=./build
 
+CC=g++ 
+CFLAGS=-Wall -Wextra -Werror -pedantic -std=c++20 
 
-MAINFILE=cpu
+_MAIN=cpu
+MAIN=$(ODIR)/$(_MAIN)
+TEST=$(ODIR)/test
 
 _OBJ = registers.o cpu.o instructions.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _DEP = cpu.h registers.h 
-DEP = $(patsubst %,$(DDIR)/%,$(_DEP))
+DEP = $(patsubst %,$(IDIR)/%,$(_DEP))
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
 	mkdir -p $(ODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(MAINFILE): $(OBJ)
+$(MAIN): $(OBJ)
+	mkdir -p build
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -rf $(ODIR) $(MAINFILE) 
+	rm -rf $(ODIR)/*
 
 tests: $(OBJ) $(SDIR)/tests.cpp
-	$(CC) -g -o $@ $^ 
+	$(CC) -I $(IDIR) -g -o $(TEST) $^
 
 debug: test
-	valgrind -q --vgdb-error=0 ./tests
+	valgrind -q --vgdb-error=0 $(TEST)
 
 test: CFLAGS += -Dunit_test
 test: clean tests
 
-.PHONY: clean test
+.PHONY: clean test all
+all: $(MAIN)
