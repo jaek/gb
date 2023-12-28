@@ -14,7 +14,7 @@ TEST=$(ODIR)/test
 _OBJ = registers.o cpu.o instructions.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-_DEP = cpu.h registers.h 
+_DEP = cpu.h registers.h instructions.h 
 DEP = $(patsubst %,$(IDIR)/%,$(_DEP))
 
 $(ODIR)/%.o: $(SDIR)/%.cpp

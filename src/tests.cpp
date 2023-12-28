@@ -2,6 +2,7 @@
 #include <fstream>
 #include <assert.h>
 
+#include "instructions.h"
 #include "registers.h"
 #include "cpu.h"
 
@@ -65,7 +66,7 @@ void cpu_test1(CPU &c){
     assert(op1.is16bit() == true);
 
     //unprefixed[0x16]={true,"LD",2,'-','-','-','-',8,0,"D",1,"n8",1};
-    c.fetch_operands(c.unprefixed[0x16], op1, op2);
+    c.fetch_operands(get_op(0x16), op1, op2);
     assert(op1.datatype == reg8);
     assert(op2.datatype == n8);
     assert(op1.data8 == 0xf2);
@@ -93,6 +94,7 @@ void register_tests(Registers &r){
   r.set_flag('n');
   r.set_flag('h');
   assert(r.get_af() == 0x00f0);
+  assert(r.get_register_by_name('F') == 0xf0);
 }
 
 void run_tests(){

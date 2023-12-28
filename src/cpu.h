@@ -11,36 +11,6 @@
 #define OC_MAX_OPCODE 0xff
 #define OC_CB_PREFIX 0xcb
 
-enum OpDataType { none, n8, a8, s8, reg8, bit, zero, vector, n16, a16, reg16};
-
-struct Operand {
-  OpDataType datatype;
-  union {
-    uint8_t  data8;
-    uint16_t data16;
-  };
-  bool is16bit();
-  uint8_t get_offset();
-  void show();
-  Operand();
-};
-
-struct OpCode {
-  bool valid;
-  char mnemonic[11];
-  uint8_t bytes;
-  char z;
-  char n;
-  char h;
-  char c;
-  uint8_t cycles_success;
-  uint8_t cycles_failed;
-  char op1_name[4];
-  uint8_t op1_bytes;
-  char op2_name[4];
-  uint8_t op2_bytes;
-};
-
 class CPU{
 
     public:
@@ -51,25 +21,21 @@ class CPU{
     uint8_t get_rom_next8(int);
     uint16_t get_rom_next16(int);
 
-    OpCode unprefixed [OC_MAX_OPCODE+1];
-    OpCode cbprefixed [OC_MAX_OPCODE+1];
-
     Registers r;
 
-    void init_opcodes();
     void clock_loop();
     void show_state();
 
     OpCode fetch_instruction();
     uint8_t fetch_operands(OpCode, Operand&, Operand&);
-    Operand get_operand(OpCode, int);
-    OpDataType get_operand_type(char*);
-    uint8_t get_operand8(OpDataType, char*, int);
-    uint16_t get_operand16(OpDataType, char*, int);
     uint8_t execute_instruction(OpCode, Operand, Operand);
 
+    Operand get_operand(OpCode, int);
+    uint8_t get_operand8(OpDataType, char*, int);
+    uint16_t get_operand16(OpDataType, char*, int);
+
     void halt();
-    uint8_t op_nop(OpCode);
+    uint8_t op_nop(OpCode, Operand, Operand);
     uint8_t op_add8(OpCode, Operand, Operand);
     CPU(uint8_t*);
 

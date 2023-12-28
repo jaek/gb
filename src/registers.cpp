@@ -1,6 +1,7 @@
 #include<cstdint>
 #include<assert.h> 
 #include<iostream>
+#include<format>
 #include"registers.h"
 
 struct HexCharStruct{
@@ -127,7 +128,9 @@ r8 Registers::get_register_by_name(char r){
     case 'L':
       return this->l;
     default:
-      return 1;
+      throw std::invalid_argument(
+        std::format(
+          "get_register_by_name: invalid char {}", r));
   }
 }
 
