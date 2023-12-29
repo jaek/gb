@@ -2,6 +2,7 @@
 #define REGISTERS_H
 
 #include <cstdint>
+#include "instructions.h"
 
 typedef uint8_t r8;
 typedef uint16_t r16;
@@ -23,20 +24,21 @@ struct Registers
   r16 sp;
   r16 pc;
 
-  uint8_t get_mask(char flag);
-  bool get_flag(char flag);
-  void set_flag(char flag);
-  void unset_flag(char flag);
+  uint8_t get_mask(char);
+  bool get_flag(char);
+  void set_flag(char);
+  void unset_flag(char);
 
-  r8 get_register_by_name(char c);
+  r8 get_register8(OpId);
+  r16 get_register16(OpId);
   uint16_t get_af();
-  void set_af(uint16_t v);
+  void set_af(uint16_t);
   uint16_t get_bc();
-  void set_bc(uint16_t v);
+  void set_bc(uint16_t);
   uint16_t get_de();
-  void set_de(uint16_t v);
+  void set_de(uint16_t);
   uint16_t get_hl();
-  void set_hl(uint16_t v);
+  void set_hl(uint16_t);
   void init_values();
   void print_registers();
   Registers();

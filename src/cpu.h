@@ -16,7 +16,7 @@ class CPU{
     public:
     bool running;
 
-    uint8_t *rom;
+    uint8_t *ROM;
 
     uint8_t get_rom_next8(int);
     uint16_t get_rom_next16(int);
@@ -27,16 +27,14 @@ class CPU{
     void show_state();
 
     OpCode fetch_instruction();
-    uint8_t fetch_operands(OpCode, Operand&, Operand&);
-    uint8_t execute_instruction(OpCode, Operand, Operand);
+    bool is_cb();
+    uint8_t execute_instruction(OpCode, uint16_t, uint16_t);
 
-    Operand get_operand(OpCode, int);
-    uint8_t get_operand8(OpDataType, char*, int);
-    uint16_t get_operand16(OpDataType, char*, int);
+    uint16_t get_operand_data(OpId, OpDataType, uint8_t);
 
     void halt();
-    uint8_t op_nop(OpCode, Operand, Operand);
-    uint8_t op_add8(OpCode, Operand, Operand);
+    uint8_t op_nop(OpCode, uint16_t, uint16_t);
+    uint8_t op_add8(OpCode, uint16_t, uint16_t);
     CPU(uint8_t*);
 
 };

@@ -12,9 +12,13 @@
 
 CPU::CPU(uint8_t *buffer)
 {
-  rom = buffer;
+  ROM = buffer;
   r = Registers();
   running = true;
+}
+
+bool CPU::is_cb(){
+  return (ROM[r.pc] == 0xcb);
 }
 
 void CPU::halt()
@@ -30,53 +34,14 @@ void CPU::show_state()
 OpCode CPU::fetch_instruction()
 {
   uint8_t opcode = get_rom_next8(0);
-  // todo: check !pc>rom_len
   if (opcode == OC_CB_PREFIX)
   {
-    return get_cb_op(get_rom_next8(1));
+    return get_cb(get_rom_next8(1));
   }
   return get_op(opcode);
 }
 
-uint8_t CPU::fetch_operands(OpCode oc, Operand &op1, Operand &op2)
-{
-  uint8_t offset = 1;
-  op1.datatype = get_operand_type(oc.op1_name);
-  op2.datatype = get_operand_type(oc.op2_name);
-
-  if (op1.datatype == none)
-  {
-    return 0;
-  }
-  if (op1.is16bit())
-  {
-    op1.data16 = get_operand16(op1.datatype, oc.op1_name, offset);
-  }
-  else
-  {
-    op1.data8 = get_operand8(op1.datatype, oc.op1_name, offset);
-  }
-
-  if (op2.datatype == none)
-  {
-    return op1.get_offset();
-  }
-
-  offset += op1.get_offset();
-
-  if (op2.is16bit())
-  {
-    op2.data16 = get_operand16(op2.datatype, oc.op2_name, offset);
-  }
-  else
-  {
-    op2.data8 = get_operand8(op2.datatype, oc.op2_name, offset);
-  }
-
-  return op1.get_offset() + op2.get_offset();
-}
-
-uint8_t CPU::execute_instruction(OpCode oc, Operand op1, Operand op2)
+uint8_t CPU::execute_instruction(OpCode oc, uint16_t op1, uint16_t op2)
 {
   if (!strcmp(oc.mnemonic, "ADD"))
   {
@@ -101,33 +66,53 @@ void CPU::clock_loop()
 #endif
 
   OpCode curr;
-  Operand op1;
-  Operand op2;
+
+  int offset;
+
+  uint16_t op1;
+  uint16_t op2;
+
   uint8_t i = 0;
   while (running)
   {
     nanosleep(&req, NULL);
-    if (i == 0)
+    if (i == 0) 
     {
+      offset = 1;
+
+      op1 = 0;
+      op2 = 0;
+
       curr = fetch_instruction();
-      fetch_operands(curr, op1, op2);
-      // run command - return clock cycles
-      i = execute_instruction(curr, op1, op2);
+#ifdef unit_test
+      std::cout << "Fetched instruction: 0x" << std::hex << (int) curr.opcode << std::endl;
+      std::cout << "Name: " << curr.mnemonic << std::endl;
+      std::cout << "Type 1: " << curr.op1_t << " Type 2: " << curr.op2_t << std::endl;
+#endif
+
+      offset = offset + is_cb();
+      op1 = get_operand_data(curr.op1_id, curr.op1_t, offset);
+      op2 = get_operand_data(curr.op2_id, curr.op2_t, offset+opDataLen(curr.op1_t));
+      //  case 0xc6:
+      // return {0xc6, "ADD", 2, 'Z', '0', 'H', 'C', 8, 0, reg8, A, n8, rom};
+      //op1 = (opDataLen(curr.op1_t) != 2) ? (op1 & 0x00ff) : op1;
+      //op2 = (opDataLen(curr.op2_t) != 2) ? (op2 & 0x00ff) : op2;
 
 #ifdef unit_test
-      std::cout << "Instruction: " << curr.mnemonic
-                << " " << curr.op1_name
-                << " " << curr.op2_name
-                << " ( ";
-      op1.show();
-      std::cout << " ";
-      op2.show();
-      std::cout << " )" << std::endl;
-      show_state();
+      std::cout << "1: " << std::hex << (int) ROM[offset] << " Offset: " << offset << std::endl;
+      std::cout << "2: " << std::hex << (int) ROM[offset+1] << " Offset: " << offset+1 << std::endl;
+      std::cout << "3: " << std::hex << (int) ROM[offset+2] << " Offset: " << offset+opDataLen(curr.op1_t) << std::endl;
+      std::cout << "4: " << std::hex << (int) ROM[offset+3] << " Offset: " << std::endl;
+      std::cout << "Operand 1: 0x" << std::hex << (int) op1 << std::endl;
+      std::cout << "Operand 2: 0x" << std::hex << (int) op1 << std::endl;
+      std::cout << "Cycles Left: " << i << std::endl;
+      //show_state();
 #endif
+      execute_instruction(curr, op1, op2);
     }
     else
     {
+      std::cout << "Cycles Left: " << i << std::endl;
       i--;
     }
   }
@@ -135,21 +120,26 @@ void CPU::clock_loop()
 
 uint8_t CPU::get_rom_next8(int offset)
 {
-  return rom[r.pc + offset];
+  return ROM[r.pc + offset];
 }
 
 uint16_t CPU::get_rom_next16(int offset)
 {
   uint8_t h = get_rom_next8(offset);
-  uint8_t l = get_rom_next8(++offset);
+  uint8_t l = get_rom_next8(offset+1);
   return (((uint16_t)h << 8) & 0xff00) | (l & 0xff);
 }
 
-
-uint8_t CPU::get_operand8(OpDataType dt, char *name, int offset)
+uint16_t CPU::get_operand_data(OpId id, OpDataType t, uint8_t offset)
 {
-  switch (dt)
+  switch (t)
   {
+  case a16:
+    return get_rom_next16(offset);
+  case n16:
+    return get_rom_next16(offset);
+  case reg16:
+    return r.get_register16(id);
   case n8:
     return get_rom_next8(offset);
   case a8:
@@ -157,42 +147,11 @@ uint8_t CPU::get_operand8(OpDataType dt, char *name, int offset)
   case s8:
     return get_rom_next8(offset);
   case reg8:
-    return r.get_register_by_name(name[0]);
+    return r.get_register8(id);
   case bit:
-    return name[0] - '0';
+    return (uint8_t) id;
   case vector:
-    break;
-  case zero:
-    break;
-  default:
-    break;
-  }
-  return 0;
-}
-
-uint16_t CPU::get_operand16(OpDataType dt, char *name, int offset)
-{
-  switch (dt)
-  {
-  case a16:
-    return get_rom_next16(offset);
-  case n16:
-    return get_rom_next16(offset);
-  case reg16:
-    switch (name[0])
-    {
-    case 'A':
-      return r.get_af();
-    case 'B':
-      return r.get_bc();
-    case 'D':
-      return r.get_de();
-    case 'H':
-      return r.get_hl();
-    default:
-      return r.sp;
-    }
-    break;
+  case flag:
   default:
     break;
   }
@@ -215,20 +174,20 @@ uint16_t CPU::get_operand16(OpDataType dt, char *name, int offset)
 // ADD | 0x87 : A, A
 // ADD | 0xC6 : A, n8
 
-uint8_t CPU::op_add8(OpCode oc, Operand op1, Operand op2)
+uint8_t CPU::op_add8(OpCode oc, uint16_t op1, uint16_t op2)
 {
-  if ((int)op1.data8 + op2.data8 > 0xff)
+  if (op1 + op2 > 0xff)
   {
     // handle_overflow
   }
   else
   {
-    r.a += op2.data8;
+    r.a += (op2 & 0x00ff);
   }
   return oc.cycles_success;
 }
 
-uint8_t CPU::op_nop(OpCode oc, Operand op1, Operand op2)
+uint8_t CPU::op_nop(OpCode oc, uint16_t op1, uint16_t op2)
 {
   (void)op1;
   (void)op2;
